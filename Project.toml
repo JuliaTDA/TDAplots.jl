@@ -1,0 +1,13 @@
+name = "TDAplots"
+uuid = "a34ba9c9-258a-4d5b-bbaf-9af986d00e54"
+authors = ["vituri <vituri.vituri@gmail.com> and contributors"]
+version = "0.0.1"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
