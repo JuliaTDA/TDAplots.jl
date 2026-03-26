@@ -16,6 +16,7 @@ NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TDAmapper = "90314d98-8742-41ec-badb-bb392eb26b11"
+UMAP = "c4f8c510-2410-5be4-91d7-4fbaeb39457e"
 
 [compat]
 Chain = "0.6"
@@ -29,6 +30,7 @@ NetworkLayout = "0.4"
 Reexport = "1"
 StatsBase = "0.33, 0.34"
 TDAmapper = "0.1"
+UMAP = "0.2.0"
 julia = "1.9"
 
 [extras]
