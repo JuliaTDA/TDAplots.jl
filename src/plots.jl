@@ -1,141 +1,169 @@
 """
-Given a numeric vector `v`, create a color vector
+    colorscale(v)
+
+Map a numeric vector `v` to a color vector using the `:inferno` color scheme.
+
+Values are min-max normalized to [0, 1] before mapping.
 """
 function colorscale(v)
     min_val = minimum(v)
     max_val = maximum(v)
     range_val = max_val - min_val
-    
-    if (range_val ≈ 0) range_val = 1 end
-    
-    color_vec = get.(Ref(cgrad(:inferno)), (v .- min_val) ./ range_val)    
 
-    return(color_vec)   
-end
-
-"""
-Rescale a vector to be between `min` and `max`
-"""
-function rescale(x; min = 0, max = 1)
-    dif = max - min
-    if dif ≈ 0
-        return replace(z -> mean([min, max]), float.(x))
+    if range_val ≈ 0
+        range_val = 1
     end
 
-    y = (x .- minimum(x)) / (maximum(x) - minimum(x)) .* (dif) .+ min
-    return y
-end
-
-function rescale(; min = 0, max = 1)
-    x -> rescale(x; min = min, max = max)
+    color_vec = get.(Ref(cgrad(:inferno)), (v .- min_val) ./ range_val)
+    return color_vec
 end
 
 """
-    mapper_plot
+    rescale(x; min=0, max=1)
+
+Rescale a numeric vector `x` to lie within [`min`, `max`].
+"""
+function rescale(x; min=0, max=1)
+    dif = max - min
+    x_min = minimum(x)
+    x_max = maximum(x)
+    x_range = x_max - x_min
+
+    if x_range ≈ 0
+        return fill(mean([min, max]), length(x))
+    end
+
+    return (x .- x_min) ./ x_range .* dif .+ min
+end
+
+"""
+    rescale(; min=0, max=1)
+
+Return a curried version of `rescale`.
+"""
+function rescale(; min=0, max=1)
+    x -> rescale(x; min=min, max=max)
+end
+
+"""
+    node_colors(M::AbstractMapper, v::Vector{<:Number}; f::Function=mean)
+
+Compute a summary value for each node (cover element) in the mapper graph.
+
+For each cover element, applies `f` to the subset of `v` indexed by that element.
+If `v` is not provided, defaults to the first coordinate of each point.
+"""
+function node_colors(M::AbstractMapper, v::Union{Nothing,Vector{<:Number}}=nothing; f::Function=mean)
+    if isnothing(v)
+        v = first.(M.X)
+    end
+
+    return map(M.C) do ids
+        f(v[ids])
+    end
+end
+
+"""
+    node_colors(M::AbstractMapper, v::Vector{<:AbstractString}; f::Function=_mode_string)
+
+Compute a categorical label for each node by finding the most common string in each cover element.
+"""
+function node_colors(M::AbstractMapper, v::Vector{<:AbstractString}; f::Function=_mode_string)
+    return map(M.C) do ids
+        f(v[ids])
+    end
+end
+
+"""
+Find the most common string in a collection. In case of ties, join up to `max_ties` values with "/".
+"""
+function _mode_string(s; max_ties=3)
+    counts = Dict{eltype(s),Int}()
+    for x in s
+        counts[x] = get(counts, x, 0) + 1
+    end
+    n_max = maximum(values(counts))
+    winners = sort([k for (k, v) in counts if v == n_max])
+    return join(winners[1:min(length(winners), max_ties)], "/")
+end
+
+"""
+    mapper_plot(M::AbstractMapper; kwargs...)
+
+Plot a mapper graph using Makie.
+
+# Keyword Arguments
+- `node_positions`: positions for each node (default: Spring layout)
+- `node_size`: sizes for each node (default: proportional to cover element size)
+- `node_values`: values for coloring nodes (default: mean of first coordinate per cover element).
+  Can be a `Vector{<:Number}` (colorscale) or `Vector{<:AbstractString}` (legend).
+- `edge_size`: line width for edges (default: 1)
+- `layout_function`: a NetworkLayout algorithm (default: `NetworkLayout.Spring(dim=2)`)
 """
 function mapper_plot(
-    mp::AbstractMapper
-    ;node_positions = nothing
-    ,node_size = nothing
-    ,node_values = nothing
-    ,edge_size = nothing
-    )
+    M::AbstractMapper;
+    node_positions=nothing,
+    node_size=nothing,
+    node_values=nothing,
+    edge_size=1,
+    layout_function=NetworkLayout.Spring(dim=2)
+)
+    g = M.g
+    C = M.C
 
     if isnothing(node_positions)
-        node_positions = NetworkLayout.spring(mp.graph)
+        node_positions = layout_function(g)
     end
 
-    dim = node_positions[1] |> length
+    dim = length(node_positions[1])
 
     if isnothing(node_size)
-        node_size = @pipe map(length, mp.CX.covering) |> rescale(min = 10, max = 75)
-    end
-
-    if isnothing(node_values)
-        node_values = map(mp.CX.covering) do id
-            mp.CX.X[1, id] |> mean
+        node_size = @chain begin
+            map(length, C)
+            rescale(min=10, max=75)
         end
     end
 
-    if isnothing(edge_size)
-        edge_size = 1
+    if isnothing(node_values)
+        node_values = node_colors(M)
     end
 
-    # start figure
-    f = Figure();
+    # Create figure
+    f = Figure()
     if dim == 2
         ax = Axis(f[1, 1])
     else
         ax = Axis3(f[1, 1])
-    end    
+    end
 
-    # plot edges
-    for e ∈ edges(mp.graph)
+    # Plot edges
+    for e in edges(g)
         e.src >= e.dst && continue
-        linesegments!(ax, [node_positions[e.src], node_positions[e.dst]], color = :black, linewidth = edge_size)
+        linesegments!(ax, [node_positions[e.src], node_positions[e.dst]], color=:black, linewidth=edge_size)
     end
 
-    # if node_values is a string, plot and add the legend
+    # Plot nodes
     if node_values isa Vector{<:AbstractString}
+        # Categorical: group by class and add legend
+        groups = Dict{String,Vector{Int}}()
+        for (i, label) in enumerate(node_values)
+            ids = get!(groups, label, Int[])
+            push!(ids, i)
+        end
 
-        # gambiarra!!
-        dfs = @pipe DataFrame(
-            pos = node_positions, class = node_values, row = 1:length(node_positions)
-            ,node_size = node_size
-            ) |> 
-        groupby(_, :class) |> 
-        collect
-
-        if dim == 2
-            for df ∈ dfs
-                scatter!(ax, df.pos .|> first, df.pos .|> last, markersize = df.node_size, label = df.class[1])
-            end
-        else 
-            for df ∈ dfs
-                scatter!(ax, df.pos .|> first, df.pos .|> (x -> x[2]), df.pos .|> last, markersize = df.node_size, label = df.class[1])
-            end
-        end        
-
-        Legend(f[1, 2], ax, merge = true)
-    else # else, plot the usual values
-        scatter!(ax, node_positions, markersize = node_size, color = node_values)
-        Colorbar(f[1, 2], colorrange = extrema(node_values))
+        for label in sort(collect(keys(groups)))
+            idx = groups[label]
+            scatter!(ax, node_positions[idx], markersize=node_size[idx], label=label)
+        end
+        Legend(f[1, 2], ax, merge=true)
+    else
+        # Numeric: use colorscale
+        scatter!(ax, node_positions, markersize=node_size, color=node_values)
+        Colorbar(f[1, 2], colorrange=extrema(node_values))
     end
 
-    hidedecorations!(ax); hidespines!(ax)
-    
-    # ax.aspect = DataAspect()
-    f
-end
+    hidedecorations!(ax)
+    hidespines!(ax)
 
-function node_colors(mp::AbstractMapper, v::Union{Nothing, Vector{<:Number}} = nothing ; f::Function = mean)
-    if isnothing(v) 
-        v = mp.CX.X[1, :]
-    end
-
-    v2 = map(mp.CX.covering) do id
-        v[id] |> f
-    end
-
-    return v2
-end
-
-function node_colors(mp::AbstractMapper, v::Vector{<:AbstractString}; f::Function = string_count)
-    v2 = map(mp.CX.covering) do id
-        v[id] |> f
-    end
-
-    return v2
-end
-
-function string_count(s; max_ties = 3)
-    counting = Dict(i => length(filter(x -> x == i, s)) for i ∈ unique(s))
-    n_max = maximum(counting)[2]
-    uniques = findall(c -> values(c) == n_max, counting)
-
-    v = @pipe uniques[1:clamp(length(uniques), 1, max_ties)] |>
-        sort |>
-        join(_, "/")
-
-    return v
+    return f
 end
