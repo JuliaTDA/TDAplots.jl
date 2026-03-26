@@ -9,14 +9,14 @@ using TDAplots
 using TDAmapper.ImageCovers, TDAmapper.IntervalCovers, TDAmapper.Refiners
 
 # Generate 2000 points on a torus
-X = torus(2000)
+X = torus(5000)
 
 # Use z-coordinate as filter function
-fv = [p[3] for p in X]
+fv = [p[2] for p in X]
 
 # Build classical mapper
-ic = R1Cover(fv, Uniform(length=15, expansion=0.3))
-M = classical_mapper(X, ic, DBscan(radius=0.3))
+ic = R1Cover(fv, Uniform(length=15, expansion=0.5))
+M = classical_mapper(X, ic, DBscan(radius=0.2))
 
 # --- Spring layout (default, graph-based) ---
 fig1 = mapper_plot(M)
@@ -26,7 +26,7 @@ pos_mds = layout_mds(M, dim=2)
 fig2 = mapper_plot(M, node_positions=pos_mds, node_values=node_colors(M, fv))
 
 # --- Isomap layout ---
-pos_isomap = layout_isomap(M, dim=2)
+pos_isomap = layout_isomap(M, dim=3)
 fig3 = mapper_plot(M, node_positions=pos_isomap, node_values=node_colors(M, fv))
 
 # --- 3D MDS layout ---
