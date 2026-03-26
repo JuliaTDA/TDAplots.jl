@@ -110,3 +110,124 @@ function layout_isomap(M::AbstractMapper; dim::Integer=2, kwargs...)
     f = x -> predict(fit(Isomap, x, maxoutdim=dim, kwargs...))
     return layout_generic(M, f)
 end
+
+# --- MultivariateStats layouts ---
+
+"""
+    layout_pca(M::AbstractMapper; dim=2, kwargs...)
+
+PCA (Principal Component Analysis) layout of mapper nodes.
+"""
+function layout_pca(M::AbstractMapper; dim::Integer=2, kwargs...)
+    f = x -> predict(fit(PCA, x; maxoutdim=dim, kwargs...), x)
+    return layout_generic(M, f)
+end
+
+"""
+    layout_kpca(M::AbstractMapper; dim=2, kwargs...)
+
+Kernel PCA layout of mapper nodes.
+"""
+function layout_kpca(M::AbstractMapper; dim::Integer=2, kwargs...)
+    f = x -> predict(fit(KernelPCA, x; maxoutdim=dim, kwargs...), x)
+    return layout_generic(M, f)
+end
+
+"""
+    layout_ppca(M::AbstractMapper; dim=2, kwargs...)
+
+Probabilistic PCA layout of mapper nodes.
+"""
+function layout_ppca(M::AbstractMapper; dim::Integer=2, kwargs...)
+    f = x -> predict(fit(PPCA, x; maxoutdim=dim, kwargs...), x)
+    return layout_generic(M, f)
+end
+
+"""
+    layout_fa(M::AbstractMapper; dim=2, kwargs...)
+
+Factor Analysis layout of mapper nodes.
+"""
+function layout_fa(M::AbstractMapper; dim::Integer=2, kwargs...)
+    f = x -> predict(fit(FactorAnalysis, x; maxoutdim=dim, kwargs...), x)
+    return layout_generic(M, f)
+end
+
+"""
+    layout_ica(M::AbstractMapper; dim=2, kwargs...)
+
+ICA (Independent Component Analysis) layout of mapper nodes.
+
+Note: ICA uses a positional `k` argument rather than `maxoutdim`.
+"""
+function layout_ica(M::AbstractMapper; dim::Integer=2, kwargs...)
+    f = x -> predict(fit(ICA, x, dim; kwargs...), x)
+    return layout_generic(M, f)
+end
+
+# --- UMAP layout ---
+
+"""
+    layout_umap(M::AbstractMapper; dim=2, kwargs...)
+
+UMAP layout of mapper nodes.
+"""
+function layout_umap(M::AbstractMapper; dim::Integer=2, kwargs...)
+    f = x -> begin
+        result = UMAP.fit(x, dim; kwargs...)
+        stack(result.embedding)
+    end
+    return layout_generic(M, f)
+end
+
+# --- Graph-topology layouts ---
+
+"""
+    layout_spring(M::AbstractMapper; dim=2, kwargs...)
+
+Spring (force-directed) layout using the mapper graph topology.
+"""
+function layout_spring(M::AbstractMapper; dim::Integer=2, kwargs...)
+    pos = NetworkLayout.Spring(dim=dim; kwargs...)(M.g)
+    return [Point{dim}(p) for p in pos]
+end
+
+"""
+    layout_stress(M::AbstractMapper; dim=2, kwargs...)
+
+Stress majorization layout using the mapper graph topology.
+"""
+function layout_stress(M::AbstractMapper; dim::Integer=2, kwargs...)
+    pos = NetworkLayout.Stress(dim=dim; kwargs...)(M.g)
+    return [Point{dim}(p) for p in pos]
+end
+
+"""
+    layout_spectral_graph(M::AbstractMapper; dim=2, kwargs...)
+
+Spectral graph layout using the mapper graph topology.
+"""
+function layout_spectral_graph(M::AbstractMapper; dim::Integer=2, kwargs...)
+    pos = NetworkLayout.Spectral(dim=dim; kwargs...)(M.g)
+    return [Point{dim}(p) for p in pos]
+end
+
+"""
+    layout_sfdp(M::AbstractMapper; dim=2, kwargs...)
+
+SFDP (Scalable Force-Directed Placement) layout using the mapper graph topology.
+"""
+function layout_sfdp(M::AbstractMapper; dim::Integer=2, kwargs...)
+    pos = NetworkLayout.SFDP(dim=dim; kwargs...)(M.g)
+    return [Point{dim}(p) for p in pos]
+end
+
+"""
+    layout_shell(M::AbstractMapper)
+
+Shell layout using the mapper graph topology. Always 2D.
+"""
+function layout_shell(M::AbstractMapper)
+    pos = NetworkLayout.Shell()(M.g)
+    return [Point{2}(p) for p in pos]
+end
