@@ -1,29 +1,35 @@
 module TDAplots
 
-using Colors; using ColorSchemes;
-using GLMakie; import NetworkLayout
+using Colors, ColorSchemes
+using GLMakie
+import NetworkLayout
+using Reexport
+@reexport using TDAmapper
+using Chain
+using StatsBase: mean
 
-export mean,
-    @pipe,
-    DataFrame,
-    groupby;
+export @chain
 
-include("plots.jl");
-export rescale, 
-    colorscale, 
-    mapper_plot, 
-    node_colors;
+include("layout_naive.jl")
+export NaiveLayouts
 
-using MultivariateStats, ManifoldLearning;
-include("layouts.jl");
+include("plots.jl")
+export rescale,
+    colorscale,
+    mapper_plot,
+    node_colors
+
+using MultivariateStats, ManifoldLearning
+include("layouts.jl")
 export layout_generic,
+    centroid,
     layout_mds,
-    layout_hlle,
-    layout_isomap,
-    layout_lem,
     layout_lle,
+    layout_hlle,
+    layout_lem,
     layout_ltsa,
+    layout_diffmap,
     layout_tsne,
-    layout_diffmap;
+    layout_isomap
 
 end
