@@ -5,9 +5,11 @@ using GLMakie
 import NetworkLayout
 using Reexport
 @reexport using TDAmapper
+using PersistenceDiagrams
 using Graphs: edges
 using Chain
 using StatsBase: mean
+using MetricSpaces: EuclideanSpace, as_matrix
 
 export @chain
 
@@ -20,6 +22,14 @@ export rescale,
     metricspace_plot,
     mapper_plot,
     node_colors
+
+include("persistence_plots.jl")
+export persistence_plot,
+    barcode_plot
+
+include("tomato_plots.jl")
+export tomato_graph_plot,
+    tomato_persistence_plot
 
 using MultivariateStats, ManifoldLearning
 import UMAP
