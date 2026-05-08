@@ -66,4 +66,30 @@ using Graphs: nv, ne
         @test size(ctd, 1) == 2  # 2D points
         @test size(ctd, 2) == length(M.C)
     end
+
+    @testset "layout_landmarks" begin
+        X = sphere(200, dim=2)
+        fv = first.(X)
+        ic = TDAmapper.ImageCovers.R1Cover(fv, TDAmapper.IntervalCovers.Uniform(length=5, expansion=0.3))
+        M = classical_mapper(X, ic, TDAmapper.Refiners.DBscan(radius=0.2))
+
+        pos = layout_landmarks(M)
+        @test length(pos) == length(M.C)
+        @test pos[1] isa Point{2}
+
+        pos3 = layout_landmarks(M; dim=3)
+        @test length(pos3) == length(M.C)
+        # dim=3 on 2D data: d = min(3, 2) = 2, so still Point{2}
+        @test pos3[1] isa Point{2}
+    end
+
+    @testset "layout_generic error" begin
+        X = sphere(200, dim=2)
+        fv = first.(X)
+        ic = TDAmapper.ImageCovers.R1Cover(fv, TDAmapper.IntervalCovers.Uniform(length=5, expansion=0.3))
+        M = classical_mapper(X, ic, TDAmapper.Refiners.DBscan(radius=0.2))
+
+        # 4D output should throw
+        @test_throws ErrorException layout_generic(M, x -> x[[1,2,3,4], :])
+    end
 end

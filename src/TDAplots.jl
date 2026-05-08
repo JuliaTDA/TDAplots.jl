@@ -37,6 +37,7 @@ import NetworkLayout
 include("layouts.jl")
 export layout_generic,
     centroid,
+    layout_landmarks,
     layout_mds,
     layout_lle,
     layout_hlle,

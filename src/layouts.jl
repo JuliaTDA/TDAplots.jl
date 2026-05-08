@@ -26,9 +26,25 @@ function layout_generic(M::AbstractMapper, f::Function)
     ctd = centroid(M)
     result = f(ctd)
     dim = size(result, 1)
-    @assert dim ∈ [2, 3] "Output dimension must be 2 or 3, got $dim"
+    dim ∈ (2, 3) || error("Output dimension must be 2 or 3, got $dim")
     pos = [Point{dim}(result[:, i]) for i in axes(result, 2)]
     return pos
+end
+
+"""
+    layout_landmarks(M::AbstractMapper; dim=2)
+
+Position each mapper node at the centroid of its cover element, projected to `dim` dimensions.
+
+For ball mapper this coincides with the landmark point, producing a geographically
+faithful layout in the original space — no dimensionality reduction is applied.
+For 2D/3D point clouds, set `dim` to match the ambient dimension.
+"""
+function layout_landmarks(M::AbstractMapper; dim::Integer=2)
+    ctd = centroid(M)  # ambient_dim × n_nodes matrix
+    ambient = size(ctd, 1)
+    d = min(dim, ambient)
+    return [Point{d}(ctd[1:d, i]) for i in axes(ctd, 2)]
 end
 
 """
