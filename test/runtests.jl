@@ -81,6 +81,9 @@ using Graphs: nv, ne
         @test length(pos3) == length(M.C)
         # dim=3 on 2D data: d = min(3, 2) = 2, so still Point{2}
         @test pos3[1] isa Point{2}
+
+        # dim=1 is invalid (d < 2) — must error
+        @test_throws ErrorException layout_landmarks(M; dim=1)
     end
 
     @testset "layout_generic error" begin

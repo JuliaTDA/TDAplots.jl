@@ -44,6 +44,7 @@ function layout_landmarks(M::AbstractMapper; dim::Integer=2)
     ctd = centroid(M)  # ambient_dim × n_nodes matrix
     ambient = size(ctd, 1)
     d = min(dim, ambient)
+    d ∈ (2, 3) || error("Effective output dimension must be 2 or 3, got $d (dim=$dim, ambient=$ambient)")
     return [Point{d}(ctd[1:d, i]) for i in axes(ctd, 2)]
 end
 
