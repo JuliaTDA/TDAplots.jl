@@ -1,19 +1,20 @@
 """
-    metricspace_plot(X::EuclideanSpace; dims=nothing, color=nothing, markersize=10)
+    metricspace_plot(X::EuclideanSpace; dims=nothing, color=nothing, colormap=:viridis, markersize=10)
 
 Plot a `EuclideanSpace` as a scatter plot using Makie.
 
 # Keyword Arguments
 - `dims`: which dimensions to plot (e.g., `[1, 3, 5]`). Defaults to the first 2 or 3 dimensions.
-  If the data is 2D, plots 2D; if 3D+, plots the first 3 dimensions.
 - `color`: a `Vector{<:Number}` (mapped to a colorscale with colorbar) or a
   `Vector{<:AbstractString}` (categorical, with legend). If `nothing`, uses a default color.
-- `markersize`: marker size for the scatter plot (default: 10).
+- `colormap`: Makie colormap used when `color` is numeric (default: `:viridis`).
+- `markersize`: marker size (default: 10).
 """
 function metricspace_plot(
     X::EuclideanSpace;
     dims=nothing,
     color=nothing,
+    colormap=:viridis,
     markersize=10
 )
     N = length(X[1])
@@ -27,31 +28,32 @@ function metricspace_plot(
         error("dims must specify 2 or 3 dimensions, got $ndims")
     end
 
-    if ndims == 2
-        positions = [Point2f(x[dims[1]], x[dims[2]]) for x in X]
+    positions = if ndims == 2
+        [Point2f(x[dims[1]], x[dims[2]]) for x in X]
     else
-        positions = [Point3f(x[dims[1]], x[dims[2]], x[dims[3]]) for x in X]
+        [Point3f(x[dims[1]], x[dims[2]], x[dims[3]]) for x in X]
     end
 
     f = Figure()
     ax = ndims == 2 ? Axis(f[1, 1]) : Axis3(f[1, 1])
 
     if isnothing(color)
-        scatter!(ax, positions, markersize=markersize)
+        scatter!(ax, positions; markersize=markersize)
     elseif color isa Vector{<:Number}
-        scatter!(ax, positions, markersize=markersize, color=color)
-        Colorbar(f[1, 2], colorrange=extrema(color))
+        cr = extrema(color)
+        scatter!(ax, positions; markersize=markersize,
+            color=color, colormap=colormap, colorrange=cr)
+        Colorbar(f[1, 2]; colormap=colormap, colorrange=cr)
     elseif color isa Vector{<:AbstractString}
         groups = Dict{String,Vector{Int}}()
         for (i, label) in enumerate(color)
-            ids = get!(groups, label, Int[])
-            push!(ids, i)
+            push!(get!(groups, label, Int[]), i)
         end
         for label in sort(collect(keys(groups)))
             idx = groups[label]
-            scatter!(ax, positions[idx], markersize=markersize, label=label)
+            scatter!(ax, positions[idx]; markersize=markersize, label=label)
         end
-        Legend(f[1, 2], ax, merge=true)
+        Legend(f[1, 2], ax; merge=true)
     end
 
     hidedecorations!(ax)
