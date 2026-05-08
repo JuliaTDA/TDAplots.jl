@@ -89,7 +89,7 @@ using Graphs: nv, ne
         ic = TDAmapper.ImageCovers.R1Cover(fv, TDAmapper.IntervalCovers.Uniform(length=5, expansion=0.3))
         M = classical_mapper(X, ic, TDAmapper.Refiners.DBscan(radius=0.2))
 
-        # 4D output should throw
-        @test_throws ErrorException layout_generic(M, x -> x[[1,2,3,4], :])
+        # 4D output should throw (vcat doubles the rows: 2 → 4)
+        @test_throws ErrorException layout_generic(M, x -> vcat(x, x))
     end
 end
