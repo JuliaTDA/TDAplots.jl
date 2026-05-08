@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TDAplots.jl provides visualization for TDA Mapper results using GLMakie. It sits at the top of the TDA stack: `using TDAplots` re-exports both TDAmapper.jl and MetricSpaces.jl, giving users the full pipeline from point clouds to plots.
+TDAplots.jl provides visualization for TDA Mapper results using Makie. It sits at the top of the TDA stack: `using TDAplots` re-exports both TDAmapper.jl and MetricSpaces.jl, giving users the full pipeline from point clouds to plots. Users must load a Makie backend (GLMakie, CairoMakie, or WGLMakie) before plotting.
 
 ## Common Commands
 
@@ -21,7 +21,7 @@ julia --project=. -e 'using Revise; using TDAplots'
 Three source files under `src/`:
 
 **`plots.jl`** - Core visualization:
-- `mapper_plot(M; layout, node_color, ...)` - Main plotting function, renders mapper graph with GLMakie
+- `mapper_plot(M; layout, node_color, colormap, show_node_ids, ...)` - Main plotting function, renders mapper graph with Makie
 - `node_colors(M, values; f=mean)` - Aggregate per-point values to per-node colors. Supports numeric (applies colorscale) and categorical (returns labels for legend)
 - `rescale(x; min, max)` - Min-max normalization, also works curried: `rescale(min=a, max=b)`
 - `colorscale(v)` - Maps numeric vector to `:inferno` color scheme
@@ -45,7 +45,7 @@ Three source files under `src/`:
 ## Dependencies
 
 - **TDAmapper.jl** - Mapper algorithms (re-exported, which also re-exports MetricSpaces.jl)
-- **GLMakie.jl** - GPU-accelerated plotting backend
+- **Makie.jl** - Plotting API (backend-agnostic; load GLMakie, CairoMakie, or WGLMakie separately)
 - **NetworkLayout.jl** - Graph layout algorithms (Spring, Stress, SFDP, etc.)
 - **ManifoldLearning.jl** - LLE, Isomap, Laplacian Eigenmaps, Diffusion Maps
 - **MultivariateStats.jl** - PCA, MDS, Factor Analysis, ICA

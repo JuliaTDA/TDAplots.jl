@@ -22,6 +22,7 @@ Pkg.add("TDAplots")
 ## Quick Start
 
 ```julia
+using CairoMakie  # or GLMakie/WGLMakie
 using TDAplots
 using TDAmapper.ImageCovers, TDAmapper.IntervalCovers, TDAmapper.Refiners
 

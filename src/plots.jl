@@ -157,9 +157,12 @@ Plot a mapper graph using Makie.
 # Keyword Arguments
 - `node_positions`: positions for each node (default: Spring layout)
 - `node_size`: sizes for each node (default: proportional to cover element size)
-- `node_values`: values for coloring nodes (default: mean of first coordinate per cover element).
-  Can be a `Vector{<:Number}` (colorscale) or `Vector{<:AbstractString}` (legend).
+- `node_values`: values for coloring nodes (default: mean of first coordinate per
+  cover element). Can be a `Vector{<:Number}` (colorscale) or
+  `Vector{<:AbstractString}` (categorical legend).
+- `colormap`: Makie colormap for numeric `node_values` (default: `:viridis`)
 - `edge_size`: line width for edges (default: 1)
+- `show_node_ids`: if `true`, overlay each node's integer index (default: `false`)
 - `layout_function`: a NetworkLayout algorithm (default: `NetworkLayout.Spring(dim=2)`)
 """
 function mapper_plot(
@@ -167,7 +170,9 @@ function mapper_plot(
     node_positions=nothing,
     node_size=nothing,
     node_values=nothing,
+    colormap=:viridis,
     edge_size=1,
+    show_node_ids=false,
     layout_function=NetworkLayout.Spring(dim=2)
 )
     g = M.g
@@ -190,38 +195,42 @@ function mapper_plot(
         node_values = node_colors(M)
     end
 
-    # Create figure
     f = Figure()
-    if dim == 2
-        ax = Axis(f[1, 1])
-    else
-        ax = Axis3(f[1, 1])
-    end
+    ax = dim == 2 ? Axis(f[1, 1]) : Axis3(f[1, 1])
 
-    # Plot edges
-    for e in edges(g)
-        e.src >= e.dst && continue
-        linesegments!(ax, [node_positions[e.src], node_positions[e.dst]], color=:black, linewidth=edge_size)
+    # Batch all edges into a single linesegments! call
+    if ne(g) > 0
+        PT = eltype(node_positions)
+        edge_pts = PT[]
+        for e in edges(g)
+            push!(edge_pts, node_positions[e.src], node_positions[e.dst])
+        end
+        linesegments!(ax, edge_pts; color=:black, linewidth=edge_size)
     end
 
     # Plot nodes
     if node_values isa Vector{<:AbstractString}
-        # Categorical: group by class and add legend
         groups = Dict{String,Vector{Int}}()
         for (i, label) in enumerate(node_values)
-            ids = get!(groups, label, Int[])
-            push!(ids, i)
+            push!(get!(groups, label, Int[]), i)
         end
-
         for label in sort(collect(keys(groups)))
             idx = groups[label]
-            scatter!(ax, node_positions[idx], markersize=node_size[idx], label=label)
+            scatter!(ax, node_positions[idx]; markersize=node_size[idx], label=label)
         end
-        Legend(f[1, 2], ax, merge=true)
+        Legend(f[1, 2], ax; merge=true)
     else
-        # Numeric: use colorscale
-        scatter!(ax, node_positions, markersize=node_size, color=node_values)
-        Colorbar(f[1, 2], colorrange=extrema(node_values))
+        cr = extrema(node_values)
+        scatter!(ax, node_positions;
+            markersize=node_size, color=node_values,
+            colormap=colormap, colorrange=cr)
+        Colorbar(f[1, 2]; colormap=colormap, colorrange=cr)
+    end
+
+    if show_node_ids
+        text!(ax, node_positions;
+            text=string.(1:length(node_positions)),
+            align=(:center, :center), fontsize=10)
     end
 
     hidedecorations!(ax)

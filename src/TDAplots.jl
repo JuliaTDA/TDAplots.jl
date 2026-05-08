@@ -1,12 +1,12 @@
 module TDAplots
 
 using Colors, ColorSchemes
-using GLMakie
+using Makie
 import NetworkLayout
 using Reexport
 @reexport using TDAmapper
 using PersistenceDiagrams
-using Graphs: edges
+using Graphs: edges, ne
 using Chain
 using StatsBase: mean
 using MetricSpaces: EuclideanSpace, as_matrix
