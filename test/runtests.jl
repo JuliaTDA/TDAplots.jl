@@ -95,4 +95,23 @@ using Graphs: nv, ne
         # 4D output should throw (vcat doubles the rows: 2 → 4)
         @test_throws ErrorException layout_generic(M, x -> vcat(x, x))
     end
+
+    @testset "tomato_plots end-to-end" begin
+        using ToMATo
+        using MetricSpaces.Datasets: two_clusters
+        using Makie: Figure, FigureAxisPlot
+        using Random
+        Random.seed!(42)
+
+        X = two_clusters(200, dim=2, separation=10)
+        g = ToMATo.proximity_graph(X, 1.5, max_k_ball=10, k_nn=5, min_k_ball=2)
+        ds = ToMATo.knn_density(X, k=5)
+        clusters, bds = ToMATo.tomato(X, g, ds, 0.1)
+
+        fig1 = tomato_graph_plot(X, g, ds)
+        @test fig1 isa Figure
+
+        fig2 = tomato_persistence_plot(bds)
+        @test fig2 isa FigureAxisPlot || fig2 isa Figure
+    end
 end

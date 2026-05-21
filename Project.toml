@@ -36,7 +36,12 @@ UMAP = "0.2.0"
 julia = "1.9"
 
 [extras]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ToMATo = "9853e363-5d33-44e1-8657-922a46906663"
+
+[sources]
+ToMATo = {path = "../ToMATo.jl"}
 
 [targets]
-test = ["Test"]
+test = ["Random", "Test", "ToMATo"]
