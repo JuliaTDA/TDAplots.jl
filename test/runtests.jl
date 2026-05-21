@@ -1,6 +1,8 @@
 using TDAplots
 using Test
 using Graphs: nv, ne
+using MetricSpaces.Datasets: sphere
+using Makie: Point
 
 @testset "TDAplots.jl" begin
     @testset "rescale" begin
