@@ -178,24 +178,14 @@ function mapper_plot(
     layout_function=NetworkLayout.Spring(dim=2)
 )
     g = M.g
-    C = M.C
 
-    if isnothing(node_positions)
-        node_positions = layout_function(g)
-    end
-
-    dim = length(node_positions[1])
-
-    if isnothing(node_size)
-        node_size = @chain begin
-            map(length, C)
-            rescale(min=10, max=75)
-        end
-    end
-
-    if isnothing(node_values)
-        node_values = node_colors(M)
-    end
+    node_positions, node_size, node_values, dim = _node_geometry(
+        M;
+        node_positions=node_positions,
+        node_size=node_size,
+        node_values=node_values,
+        layout_function=layout_function
+    )
 
     f = Figure()
     ax = dim == 2 ? Axis(f[1, 1]) : Axis3(f[1, 1])

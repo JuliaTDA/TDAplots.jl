@@ -1,8 +1,10 @@
 using TDAplots
 using Test
-using Graphs: nv, ne
+using Graphs: nv, ne, SimpleGraph, add_edge!, path_graph
 using MetricSpaces.Datasets: sphere
-using Makie: Point
+using MetricSpaces: EuclideanSpace
+import Makie
+using Makie: Point, Figure, Observable, to_value
 
 @testset "TDAplots.jl" begin
     @testset "rescale" begin
@@ -96,6 +98,100 @@ using Makie: Point
 
         # 4D output should throw (vcat doubles the rows: 2 → 4)
         @test_throws ErrorException layout_generic(M, x -> vcat(x, x))
+    end
+
+    @testset "mapper_explorer" begin
+        # Use CairoMakie as a (non-interactive) backend so the figure renders.
+        using CairoMakie
+        CairoMakie.activate!()
+
+        # Build a small Mapper directly: 20 points in 2D, 3 overlapping cover
+        # elements, connected as a path graph (1 - 2 - 3).
+        pts = [[Float64(i), Float64(i % 3)] for i in 1:20]
+        X = EuclideanSpace(pts)
+        C = [collect(1:8), collect(6:14), collect(12:20)]
+        g = path_graph(3)
+        M = Mapper(X=X, C=C, g=g)
+
+        # --- Basic return shape -------------------------------------------
+        res = mapper_explorer(M)
+        @test res isa MapperExplorer
+        @test res.figure isa Figure
+        @test res.selected_node isa Observable
+        @test res.selected_node[] === nothing
+        # NamedTuple-like access / destructuring
+        @test propertynames(res) == (:figure, :selected_node)
+
+        # The right-panel point colors live in an Observable that reacts to the
+        # selection. Reach the scatter plot for the data panel (ax_data is the
+        # axis at fig[1, 3]).
+        # Find the data scatter via the figure's content: we recompute the
+        # color observable behavior by driving selected_node directly.
+        # Capture the colors before selection.
+        # The colors observable is internal; we validate behavior through a
+        # locally rebuilt lift mirroring the implementation contract: members
+        # of the selected node must be visually distinct from non-members.
+
+        # --- Drive the observable: select node 2 --------------------------
+        # Grab the data-panel scatter plot to read its color observable.
+        data_scatter = nothing
+        for ax in res.figure.content
+            if ax isa Makie.Axis
+                for p in ax.scene.plots
+                    if p isa Makie.Scatter && length(p[1][]) == length(pts)
+                        data_scatter = p
+                    end
+                end
+            end
+        end
+        @test data_scatter !== nothing
+
+        colors_default = copy(to_value(data_scatter.color))
+        @test length(colors_default) == length(pts)
+        @test all(c -> c == colors_default[1], colors_default)  # uniform when unselected
+
+        res.selected_node[] = 2
+        @test res.selected_node[] == 2
+        colors_sel = copy(to_value(data_scatter.color))
+        members = Set(C[2])
+        member_colors = unique(colors_sel[collect(members)])
+        nonmember_idx = [i for i in 1:length(pts) if !(i in members)]
+        nonmember_colors = unique(colors_sel[nonmember_idx])
+        # members and non-members must be colored differently
+        @test isempty(intersect(Set(member_colors), Set(nonmember_colors)))
+        # and the styling changed from the default (unselected) state
+        @test colors_sel != colors_default
+
+        # --- Reset to nothing ---------------------------------------------
+        res.selected_node[] = nothing
+        @test res.selected_node[] === nothing
+        colors_reset = copy(to_value(data_scatter.color))
+        @test colors_reset == colors_default
+
+        # --- data= override ------------------------------------------------
+        custom_data = [(rand(), rand()) for _ in 1:20]
+        res2 = mapper_explorer(M; data=custom_data)
+        @test res2.figure isa Figure
+        @test res2.selected_node[] === nothing
+        res2.selected_node[] = 1
+        @test res2.selected_node[] == 1
+
+        # --- 3D M.X --------------------------------------------------------
+        pts3 = [[Float64(i), Float64(i % 3), Float64(i % 5)] for i in 1:20]
+        X3 = EuclideanSpace(pts3)
+        M3 = Mapper(X=X3, C=C, g=g)
+        res3 = mapper_explorer(M3)
+        @test res3.figure isa Figure
+        @test res3.selected_node[] === nothing
+        res3.selected_node[] = 3
+        @test res3.selected_node[] == 3
+
+        # --- inspector=true must not error on CairoMakie -------------------
+        res4 = mapper_explorer(M; inspector=true)
+        @test res4.figure isa Figure
+
+        # --- categorical node_values is rejected ---------------------------
+        @test_throws ErrorException mapper_explorer(M; node_values=["a", "b", "c"])
     end
 
     @testset "tomato_plots end-to-end" begin

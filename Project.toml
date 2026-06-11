@@ -20,6 +20,7 @@ TDAmapper = "90314d98-8742-41ec-badb-bb392eb26b11"
 UMAP = "c4f8c510-2410-5be4-91d7-4fbaeb39457e"
 
 [compat]
+CairoMakie = "0.14"
 Chain = "0.6"
 ColorSchemes = "3"
 Colors = "0.12, 0.13"
@@ -36,6 +37,7 @@ UMAP = "0.2.0"
 julia = "1.9"
 
 [extras]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ToMATo = "9853e363-5d33-44e1-8657-922a46906663"
@@ -44,4 +46,4 @@ ToMATo = "9853e363-5d33-44e1-8657-922a46906663"
 ToMATo = {path = "../ToMATo.jl"}
 
 [targets]
-test = ["Random", "Test", "ToMATo"]
+test = ["CairoMakie", "Random", "Test", "ToMATo"]

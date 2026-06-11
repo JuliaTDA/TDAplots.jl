@@ -23,6 +23,10 @@ export rescale,
     mapper_plot,
     node_colors
 
+include("explorer.jl")
+export mapper_explorer,
+    MapperExplorer
+
 include("persistence_plots.jl")
 export persistence_plot,
     barcode_plot
