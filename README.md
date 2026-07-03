@@ -1,5 +1,6 @@
 # TDAplots.jl
 
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaTDA.github.io/TDAplots.jl/dev/)
 [![Build Status](https://github.com/JuliaTDA/TDAplots.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaTDA/TDAplots.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 Visualization tools for Topological Data Analysis in Julia, built on [Makie](https://docs.makie.org/) and [TDAmapper.jl](https://github.com/JuliaTDA/TDAmapper.jl).

@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+TDAplots = "a34ba9c9-258a-4d5b-bbaf-9af986d00e54"
+
+[compat]
+Documenter = "1"
