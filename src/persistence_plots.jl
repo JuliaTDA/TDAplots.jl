@@ -81,7 +81,7 @@ end
 
 Plot a persistence diagram using Makie.
 
-Accepts a single `PersistenceDiagram` or a `Vector{PersistenceDiagram}` (e.g. from Ripserer).
+Accepts a single `PersistenceDiagram` or a `Vector{PersistenceDiagram}` (e.g. from TDARipserer).
 Points are colored by homology dimension.
 
 # Keyword Arguments

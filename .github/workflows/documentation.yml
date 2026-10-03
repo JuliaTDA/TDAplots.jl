@@ -25,11 +25,10 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/cache@v2
-      # The unregistered siblings (MetricSpaces, TDAmapper) must be developed
-      # into the docs environment together with the package itself; the other
-      # dependencies (PersistenceDiagrams, Makie, …) resolve from the registry.
+      # The unregistered siblings (MetricSpaces, TDAmapper and the independent
+      # TDAPersistenceDiagrams fork) are developed with the package itself.
       # Drop the committed package Manifest.toml first: it pins the siblings
-      # (including PersistenceDiagrams) to local `../*.jl` checkouts that do not
+      # (including TDAPersistenceDiagrams) to local `../*.jl` checkouts that do not
       # exist in CI, and `develop`ing the package by path would otherwise inherit
       # those dead pins.
       - name: Develop unregistered ecosystem packages
@@ -40,6 +39,7 @@ jobs:
             Pkg.develop([
               PackageSpec(url = "https://github.com/JuliaTDA/MetricSpaces.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/TDAmapper.jl"),
+              PackageSpec(url = "https://github.com/JuliaTDA/PersistenceDiagrams.jl"),
               PackageSpec(path = pwd()),
             ])
             Pkg.instantiate()'

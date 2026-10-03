@@ -5,7 +5,7 @@ using Makie
 import NetworkLayout
 using Reexport
 @reexport using TDAmapper
-using PersistenceDiagrams
+using TDAPersistenceDiagrams
 using Graphs: edges, ne
 using Chain
 using StatsBase: mean

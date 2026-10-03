@@ -36,11 +36,10 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       # The committed Manifest.toml pins the sibling packages (MetricSpaces,
-      # TDAmapper, PersistenceDiagrams) to local `../*.jl` checkouts that do not
+      # TDAmapper, TDAPersistenceDiagrams) to local `../*.jl` checkouts that do not
       # exist in an isolated CI checkout, so drop it and resolve fresh: the
-      # unregistered siblings are `develop`ed from their GitHub URLs and
-      # PersistenceDiagrams resolves from the General registry. Developing ToMATo
-      # (a test-only dep) also overrides the `[sources]` path in Project.toml.
+      # unregistered siblings, including TDAPersistenceDiagrams, are developed
+      # from their GitHub URLs. ToMATo is also needed by the test environment.
       - name: Develop unregistered ecosystem packages
         run: |
           rm -f Manifest.toml
@@ -50,6 +49,7 @@ jobs:
               PackageSpec(url = "https://github.com/JuliaTDA/MetricSpaces.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/TDAmapper.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/ToMATo.jl"),
+              PackageSpec(url = "https://github.com/JuliaTDA/PersistenceDiagrams.jl"),
             ])
             Pkg.instantiate()'
       - uses: julia-actions/julia-buildpkg@v1
