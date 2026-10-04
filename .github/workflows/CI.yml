@@ -44,14 +44,23 @@ jobs:
         run: |
           rm -f Manifest.toml
           julia --project=. -e '
-            using Pkg
+            using Pkg, TOML
+            project = read("Project.toml", String)
             Pkg.develop([
               PackageSpec(url = "https://github.com/JuliaTDA/MetricSpaces.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/TDAmapper.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/ToMATo.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/PersistenceDiagrams.jl"),
             ])
-            Pkg.instantiate()'
+            Pkg.instantiate()
+            # Preserve the unregistered test dependency in the test manifest,
+            # without promoting it into the package's runtime dependencies.
+            manifest = TOML.parsefile("Manifest.toml")
+            delete!(manifest["deps"], "TDAplots")
+            open("test/Manifest.toml", "w") do io
+              TOML.print(io, manifest)
+            end
+            write("Project.toml", project)'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
