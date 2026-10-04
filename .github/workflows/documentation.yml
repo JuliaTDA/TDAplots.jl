@@ -39,12 +39,14 @@ jobs:
             Pkg.develop([
               PackageSpec(url = "https://github.com/JuliaTDA/MetricSpaces.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/TDAmapper.jl"),
+              PackageSpec(url = "https://github.com/JuliaTDA/ToMATo.jl"),
               PackageSpec(url = "https://github.com/JuliaTDA/PersistenceDiagrams.jl"),
               PackageSpec(path = pwd()),
             ])
             Pkg.instantiate()'
       - name: Build and deploy
         env:
+          JULIATDA_DOCS_DEPLOY: 'true'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          # for gh-pages deploy
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}       # optional SSH deploy key
         run: julia --project=docs docs/make.jl
