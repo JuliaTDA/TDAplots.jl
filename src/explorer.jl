@@ -28,9 +28,9 @@ end
 # Forward display/show to the underlying figure so returning a MapperExplorer from
 # a REPL or notebook cell renders the plot as expected.
 Base.display(me::MapperExplorer) = display(me.figure)
-Base.show(io::IO, m::MIME, me::MapperExplorer) = show(io, m, me.figure)
 Base.show(io::IO, me::MapperExplorer) =
     print(io, "MapperExplorer(figure, selected_node = $(me.selected_node[]))")
+Base.show(io::IO, ::MIME"text/plain", me::MapperExplorer) = show(io, me)
 
 # Destructuring helpers so callers can write `(; figure, selected_node) = res`
 # or `res.figure` / `res.selected_node`.
@@ -154,6 +154,7 @@ A [`MapperExplorer`](@ref) which behaves like the NamedTuple
 # Example
 ```julia
 using GLMakie, TDAplots
+using MetricSpaces.Datasets: sphere
 
 X = sphere(200, dim=2)
 fv = first.(X)

@@ -1,10 +1,13 @@
 using TDAplots
+using Aqua
 using Test
 using Graphs: nv, ne, SimpleGraph, add_edge!, path_graph
 using MetricSpaces.Datasets: sphere
 using MetricSpaces: EuclideanSpace
 import Makie
 using Makie: Point, Figure, Observable, to_value
+
+Aqua.test_all(TDAplots)
 
 @testset "TDAplots.jl" begin
     @testset "rescale" begin

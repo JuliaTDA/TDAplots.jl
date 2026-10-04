@@ -1,111 +1,56 @@
 # TDAplots.jl
 
-*Visualization for Topological Data Analysis in Julia, built on [Makie](https://docs.makie.org/) and [TDAmapper.jl](https://github.com/JuliaTDA/TDAmapper.jl).*
+A useful topology picture should let you ask where its shapes came from. `TDAplots.jl` turns a Mapper graph into a view of overlapping subsets, links nodes back to their observations, and supplies persistence and density-mode plots for the rest of the JuliaTDA workflow.
 
-```@meta
-CurrentModule = TDAplots
-```
+`using TDAplots` re-exports TDAmapper and MetricSpaces. Plotting still requires a separately loaded Makie backend. ToMATo and TDAPersistenceDiagrams examples import their own APIs explicitly.
 
-`TDAplots.jl` sits at the top of the [JuliaTDA](https://github.com/JuliaTDA)
-Mapper stack: `using TDAplots` re-exports both `TDAmapper` and `MetricSpaces`,
-so a single import gives you the whole pipeline from point clouds to plots. It
-renders Mapper graphs, persistence diagrams and barcodes, and provides an
-interactive [`mapper_explorer`](@ref) for linked selection between a Mapper
-graph and the underlying data.
-
-You must load a Makie backend (`CairoMakie`, `GLMakie`, or `WGLMakie`) before
-plotting — `CairoMakie` for static figures, `GLMakie`/`WGLMakie` for interactive
-windows.
-
-## Features
-
-* **Mapper graph plotting** — [`mapper_plot`](@ref) renders a Mapper graph in 2D
-  or 3D with customizable node size, colour and edge width.
-* **Numeric & categorical colouring** — [`node_colors`](@ref) aggregates a
-  per-point filter to per-node colours, handling both numeric scales and
-  categorical labels (with an automatic legend).
-* **Many layouts** — graph-topology layouts (`layout_spring`, `layout_stress`,
-  `layout_sfdp`, …) and metric/manifold layouts (`layout_mds`, `layout_isomap`,
-  `layout_tsne`, `layout_umap`, `layout_diffmap`, …) that position nodes by the
-  geometry of the underlying data.
-* **Persistence visuals** — [`persistence_plot`](@ref) and [`barcode_plot`](@ref).
-* **Interactive exploration** — [`mapper_explorer`](@ref) links a Mapper graph to
-  a scatter of the data: clicking a node highlights its members.
+| Start here | What you will learn |
+| :--- | :--- |
+| [Mapper tutorial](mapper.md) | Build a circle example, colour nodes, select members and export figures |
+| [Layouts and interpretation](layouts.md) | Distinguish graph topology from centroid geometry and use custom layouts |
+| [Persistence and ToMATo](persistence.md) | Read diagrams, barcodes and mode prominences without mixing conventions |
+| [Practical guide](practical.md) | Inputs, backends, exports, common errors and performance |
+| [API reference](api.md) | Plotting, layout and utility signatures |
 
 ## Installation
 
-`TDAplots.jl` builds on the unregistered ecosystem packages
-[MetricSpaces.jl](https://github.com/JuliaTDA/MetricSpaces.jl) and
-[TDAmapper.jl](https://github.com/JuliaTDA/TDAmapper.jl). Until everything is
-registered in the General registry, `develop` the siblings from their URLs:
+Use Julia 1.9 or later. The packages are currently unregistered, so resolve all required sources in one operation:
 
 ```julia
 using Pkg
-Pkg.develop(url = "https://github.com/JuliaTDA/MetricSpaces.jl")
-Pkg.develop(url = "https://github.com/JuliaTDA/TDAmapper.jl")
-Pkg.develop(url = "https://github.com/JuliaTDA/TDAplots.jl")
+Pkg.activate("tda-plots-example"; shared=false)
+Pkg.develop([
+    PackageSpec(url="https://github.com/JuliaTDA/MetricSpaces.jl"),
+    PackageSpec(url="https://github.com/JuliaTDA/TDAmapper.jl"),
+    PackageSpec(url="https://github.com/JuliaTDA/PersistenceDiagrams.jl"),
+    PackageSpec(url="https://github.com/JuliaTDA/TDAplots.jl"),
+])
+Pkg.add(PackageSpec(name="CairoMakie", version="0.14"))
 ```
 
-## Quick start
+The `PersistenceDiagrams.jl` repository provides the renamed module `TDAPersistenceDiagrams`. For the optional ToMATo tutorial, include `PackageSpec(url="https://github.com/JuliaTDA/ToMATo.jl")` in the same development list or develop it afterward, once MetricSpaces is resolved. For sibling checkouts, replace URLs with local `path` entries relative to your working directory.
 
-```julia
-using CairoMakie          # or GLMakie / WGLMakie
-using TDAplots
-using TDAmapper.ImageCovers, TDAmapper.IntervalCovers, TDAmapper.Refiners
+## Select a backend
 
-# Generate data on a circle and run Mapper
-X  = sphere(1000, dim = 2)
-fv = first.(X)
-ic = R1Cover(fv, Uniform(length = 10, expansion = 0.3))
-M  = classical_mapper(X, ic, DBscan(radius = 0.1))
+| Backend | Use it for | Requirement |
+| :--- | :--- | :--- |
+| CairoMakie | Static PNG, SVG or PDF figures and headless docs builds | Install compatible CairoMakie; no interactive clicking |
+| GLMakie | Interactive desktop exploration and hover inspection | A working graphics/display environment |
+| WGLMakie | Interactive browser or notebook exploration | A frontend capable of hosting its interactive output |
 
-# Plot (default: spring layout, nodes coloured by the first coordinate)
-mapper_plot(M)
+The package currently requires Makie 0.23; CairoMakie 0.14 is the backend version used by its tests and docs. Consult the chosen backend's compatibility when installing other backends. Load one with `using CairoMakie` (or the chosen backend) before constructing figures. See the [Makie documentation](https://docs.makie.org/) for backend configuration.
 
-# Colour nodes by any numeric filter…
-heights = [p[2] for p in X]
-mapper_plot(M; node_values = node_colors(M, heights))
+## Build the docs
 
-# …or by a categorical label (draws a legend)
-labels = [x > 0 ? "right" : "left" for x in first.(X)]
-mapper_plot(M; node_values = node_colors(M, labels))
+Place MetricSpaces.jl, TDAmapper.jl, ToMATo.jl and TDAPersistenceDiagrams.jl beside this repository. The persistence dependency's source URL is `https://github.com/JuliaTDA/PersistenceDiagrams.jl`; clone it into the directory `TDAPersistenceDiagrams.jl`.
+
+```bash
+julia --project=docs docs/setup.jl
+julia --project=docs docs/make.jl
 ```
 
-## Metric layouts
+The setup instantiates a dedicated environment including CairoMakie. The build runs the `@example` tutorials and writes `docs/build/index.html`. It does not publish unless `JULIATDA_DOCS_DEPLOY=true` is explicitly set. The interactive mouse behavior is described in the guide; the headless examples exercise programmatic selection.
 
-Position Mapper nodes using the geometry of the data rather than only the graph
-structure:
+## Related packages
 
-```julia
-X  = torus(2000)
-fv = [p[3] for p in X]
-ic = R1Cover(fv, Uniform(length = 15, expansion = 0.3))
-M  = classical_mapper(X, ic, DBscan(radius = 0.3))
-
-pos = layout_mds(M)               # MDS on cover-element centroids
-mapper_plot(M; node_positions = pos)
-```
-
-Available metric/manifold layouts include `layout_mds`, `layout_isomap`,
-`layout_tsne`, `layout_umap`, `layout_lle`, `layout_hlle`, `layout_lem`,
-`layout_ltsa`, and `layout_diffmap`.
-
-## Interactive exploration
-
-```julia
-using GLMakie             # interactive backend
-using TDAplots
-
-res = mapper_explorer(M)          # returns a MapperExplorer
-res.selected_node[] = 3           # programmatically select node 3
-```
-
-`mapper_explorer` returns a [`MapperExplorer`](@ref) whose `selected_node`
-`Observable` drives a linked highlight in a scatter of the underlying data.
-
-## See also
-
-* [MetricSpaces.jl](https://github.com/JuliaTDA/MetricSpaces.jl) — metric spaces,
-  distances and sampling.
-* [TDAmapper.jl](https://github.com/JuliaTDA/TDAmapper.jl) — Mapper algorithms.
-* [JuliaTDA.jl](https://github.com/JuliaTDA/JuliaTDA.jl) — the umbrella package.
+[MetricSpaces.jl](https://github.com/JuliaTDA/MetricSpaces.jl) supplies geometry; [TDAmapper.jl](https://github.com/JuliaTDA/TDAmapper.jl) constructs Mapper; [ToMATo.jl](https://github.com/JuliaTDA/ToMATo.jl) supplies density clustering; [JuliaTDA.jl](https://github.com/JuliaTDA/JuliaTDA.jl) provides the umbrella API.

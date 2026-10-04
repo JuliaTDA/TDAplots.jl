@@ -1,6 +1,13 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+MetricSpaces = "737298cd-3e4b-40c4-a4ce-863151543a8d"
+TDAPersistenceDiagrams = "bbe17acd-c4ea-4f01-a2b8-42969f873a90"
+TDAmapper = "90314d98-8742-41ec-badb-bb392eb26b11"
 TDAplots = "a34ba9c9-258a-4d5b-bbaf-9af986d00e54"
+ToMATo = "9853e363-5d33-44e1-8657-922a46906663"
 
 [compat]
+CairoMakie = "0.14"
 Documenter = "1"

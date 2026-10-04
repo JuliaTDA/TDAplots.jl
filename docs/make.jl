@@ -1,5 +1,6 @@
 using Documenter
 using TDAplots
+using ToMATo
 
 DocMeta.setdocmeta!(TDAplots, :DocTestSetup, :(using TDAplots); recursive = true)
 
@@ -22,11 +23,17 @@ makedocs(;
     ),
     pages = [
         "Home" => "index.md",
+        "Mapper tutorial" => "mapper.md",
+        "Layouts and interpretation" => "layouts.md",
+        "Persistence and ToMATo" => "persistence.md",
+        "Practical guide" => "practical.md",
         "API reference" => "api.md",
     ],
 )
 
-deploydocs(;
-    repo = "github.com/JuliaTDA/TDAplots.jl",
-    devbranch = "main",
-)
+if get(ENV, "JULIATDA_DOCS_DEPLOY", "false") == "true"
+    deploydocs(;
+        repo = "github.com/JuliaTDA/TDAplots.jl",
+        devbranch = "main",
+    )
+end

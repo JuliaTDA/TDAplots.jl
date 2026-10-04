@@ -36,9 +36,10 @@ end
 
 Position each mapper node at the centroid of its cover element, projected to `dim` dimensions.
 
-For ball mapper this coincides with the landmark point, producing a geographically
-faithful layout in the original space — no dimensionality reduction is applied.
-For 2D/3D point clouds, set `dim` to match the ambient dimension.
+This uses the mean of each node's member points, including for Ball Mapper;
+the centroid need not coincide with the sampled landmark. No dimensionality
+reduction is fitted. For 2D/3D point clouds, set `dim` to match the ambient
+dimension; higher-dimensional inputs use the first `dim` coordinates.
 """
 function layout_landmarks(M::AbstractMapper; dim::Integer=2)
     ctd = centroid(M)  # ambient_dim × n_nodes matrix

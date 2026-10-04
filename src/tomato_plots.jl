@@ -1,9 +1,14 @@
 """
     tomato_graph_plot(X::EuclideanSpace, g, values)
 
-Given a metric space `X` in 2 or 3 dimensions, a graph `g` obtained with
-`proximity_graph` and a numeric vector `values` (one per point),
-plot the proximity graph with nodes colored by `values`.
+Given a nonempty Euclidean space `X` with at least 2 coordinates, a graph `g`
+whose vertices match point IDs, and a numeric vector `values` (one per point),
+plot graph edges and observations colored by `values`. Inputs with more than
+3 coordinates use their first 3 coordinates without fitting an embedding.
+
+The plot uses a continuous colorbar. For a categorical cluster legend, use
+[`metricspace_plot`](@ref) with `color=string.(labels)` instead. Returns a Makie
+`Figure`.
 """
 function tomato_graph_plot(X::EuclideanSpace, g, values)
     M = as_matrix(X)
@@ -32,8 +37,16 @@ end
 """
     tomato_persistence_plot(births_and_deaths; max_value_multiplier=1.3)
 
-Plot the persistence diagram from ToMATo output. Useful to decide the best
-value of τ before applying the ToMATo algorithm again.
+Plot the nonempty ToMATo dictionary `peak_point_id => [birth_density, death_density]`
+as `(birth_density, birth_density - death_density)`. To inspect recorded finite
+mode prominences before selecting a threshold, use a ToMATo run with `τ=Inf`;
+that run allows merging without a finite prominence cutoff.
+
+`death_density=Inf` denotes an unmerged mode. Its resulting `-Inf` ordinate is
+displayed at `max_value_multiplier` times the largest finite prominence, or
+times the largest birth if no finite prominences exist. This is a display
+surrogate, not a measured finite lifetime; the helper does not specially mark
+these points. Returns a Makie `FigureAxisPlot`, whose `.axis` can be labelled.
 """
 function tomato_persistence_plot(births_and_deaths; max_value_multiplier=1.3)
     bds = [[x[2][1], x[2][1] - x[2][2]] for x in births_and_deaths] |> stack
